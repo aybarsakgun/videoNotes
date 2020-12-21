@@ -79,7 +79,7 @@ if(isset($pageRequest))
             echo json_encode(['success' => false, 'message' => 'An error occurred.']);
             exit();
         }
-    } else if ($pageRequest === 'add-video') {
+    } else if ($pageRequest == 'add-video') {
         if (!$isAdmin) {
             echo 'Security';
             exit();
@@ -118,6 +118,75 @@ if(isset($pageRequest))
             @unlink($app['videoDirectory'] . $name . '.' . $videoFileFormat);
             echo $ex->getMessage();
             exit();
+        }
+    } else if ($pageRequest == 'get-videos') {
+        $getVideosQuery = $DB_con->prepare("SELECT * FROM videos");
+        $getVideosQuery->execute();
+        $index = 0;
+        while ($fetchVideos = $getVideosQuery->fetch(PDO::FETCH_ASSOC)) {
+            $getVideoNotes = $DB_con->prepare('SELECT * FROM video_notes WHERE videoId = :videoId');
+            $getVideoNotes->execute(array(':videoId' => $fetchVideos['id']));
+            ?>
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                <div class="card">
+                    <div class="header">
+                        <h2><?=$fetchVideos['name']?></h2>
+                    </div>
+                    <div class="body">
+                        <video id="video_<?=$index?>" class="video-js vjs-default-skin vjs-16-9" width="100%" height="480"></video>
+                    </div>
+                    <div id="overlay_<?=$index?>" style="display:none">
+                        <div class="overlay-content">
+                            <p class="text"></p>
+                            <a class="continue-button">Continue</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                var player_<?=$index?> = videojs('video_<?=$index?>', {
+                    controls: true,
+                    controlBar: {
+                        'pictureInPictureToggle': false
+                    }
+                });
+                player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>', type: '<?=$fetchVideos['format']?>'});
+                player_<?=$index?>.markers({
+                    markerTip: {
+                        display: false
+                    },
+                    markers: [
+                        <?php while ($fetchVideoNotes = $getVideoNotes->fetch(PDO::FETCH_ASSOC)) { ?>
+                        {
+                            time: <?=(($fetchVideoNotes['minute'] * 60) + $fetchVideoNotes['second'])?>,
+                            text: '<?=escapeJavaScriptText($fetchVideoNotes['note'])?>',
+                        },
+                        <?php } ?>
+                    ],
+                    onMarkerClick: function(marker) {
+                        player_<?=$index?>.pause();
+                        $('#overlay_<?=$index?> .text').text(marker.text);
+                        $('#overlay_<?=$index?>').show();
+                    },
+                    onMarkerReached: function(marker) {
+                        player_<?=$index?>.pause();
+                        let currentTime = player_<?=$index?>.currentTime();
+                        setTimeout(function () {
+                            if (currentTime === player_<?=$index?>.currentTime()) {
+                                $('#overlay_<?=$index?> .text').text(marker.text);
+                                $('#overlay_<?=$index?>').show();
+                            }
+                        }, 200);
+                    },
+                });
+                $('#overlay_<?=$index?>').appendTo($('#video_<?=$index?>'));
+                $('#overlay_<?=$index?> .overlay-content .continue-button').click(function () {
+                    $('#overlay_<?=$index?>').hide();
+                    player_<?=$index?>.play();
+                });
+            </script>
+            <?php
+            $index++;
         }
     }
 } else {
