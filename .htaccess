@@ -1,0 +1,15 @@
+Options -Indexes 
+RewriteEngine on
+ErrorDocument 404 /VideoNotes/index.php
+
+RewriteRule ^login$ login.php [L,QSA]
+RewriteRule ^logout$ ajax.php?pr=logout [L,QSA]
+
+RewriteRule ^home$ index.php?pr=home [L,QSA]
+RewriteRule ^video-gallery$ index.php?pr=videos [L,QSA]
+
+RewriteRule ^add-user$ index.php?pr=add-user [L,QSA]
+
+RewriteRule ^upload-video$ index.php?pr=upload-video [L,QSA]
+RewriteRule ^upload-video-a$ ajax.php?pr=upload-video [L,QSA]
+RewriteRule ^add-video-a$ ajax.php?pr=add-video [L,QSA]
