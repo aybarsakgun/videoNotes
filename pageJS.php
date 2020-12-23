@@ -527,4 +527,148 @@ $(function () {
         });
     }));
 </script>
+<?php } else if ($pageRequest && $pageRequest == 'edit-video') { ?>
+<script>
+    $('#editVideoForm #addNewNoteButton').on('click', function() {
+        var noteIndex = $('#videoNotesTableBody tr').length + 1;
+        var duration = parseInt($('#editVideoForm #videoDuration').val());
+        var minutes = `<option value="0">0</option>`;
+        var minutesArray = [0];
+        greatestMinute = 0;
+        for (var i = 1; i <= Math.floor(duration / 60); i++) {
+            minutes += '<option value="' + i + '">' + i + '</option>';
+            minutesArray.push(i);
+        }
+        greatestMinute = Math.max(...minutesArray);
+        var remainingSeconds = duration - (greatestMinute * 60);
+        var seconds = '';
+        for (var i = 0; i <= (greatestMinute > 0 ? 59 : remainingSeconds); i++) {
+            seconds += '<option value="' + i + '">' + i + '</option>';
+        }
+        var trContent = `
+        <tr id="row${noteIndex}">
+            <td>
+                <select class="form-control minute">
+                    ${minutes}
+                </select>
+            </td>
+            <td>
+                <select class="form-control second">
+                    ${seconds}
+                </select>
+            </td>
+            <td>
+                <textarea class="form-control note" rows="3"></textarea>
+            </td>
+            <td>
+                <button type="button" id="${noteIndex}" class="btn btn-danger btn-xs waves-effect deleteNoteButton">
+                    <i class="material-icons">delete</i>
+                </button>
+            </td>
+        </tr>
+        `;
+        $('#editVideoForm #videoNotesTableBody').append(trContent);
+    });
+
+    $('body').on('change', '#videoNotesTableBody .minute', function () {
+        var seconds = '';
+        var duration = parseInt($('#editVideoForm #videoDuration').val());
+        var remainingSeconds = duration - (greatestMinute * 60);
+        for (var i = 0; i <= ($(this).val() == greatestMinute ? remainingSeconds : greatestMinute > 0 ? 59 : remainingSeconds); i++) {
+            seconds += '<option value="' + i + '">' + i + '</option>';
+        }
+        $(this).closest('tr').find('.second').html(seconds);
+    });
+
+    $('body').on('click', '.deleteNoteButton', function () {
+        var parentTr = $(this).closest('tr');
+        var rowId = parentTr.attr('id');
+        var id = parentTr.attr('data-id');
+        if (id) {
+            parentTr.attr('data-id', parseInt(id) * -1);
+            $('#' + rowId).hide();
+        } else {
+            $('#' + rowId).remove();
+        }
+    });
+
+    $("#editVideoForm").on('submit',(function(e)
+    {
+        e.preventDefault();
+
+        var name = $('#editVideoForm #name').val();
+
+        if (!name) {
+            $('#result').html('<div class="alert alert-danger m-b-0">A name must be specified for the video.</div>');
+            return false;
+        }
+        var noteDurationsValid = true;
+        var noteNoteValid = true;
+        var durations = [];
+        $.each($('#videoNotesTableBody tr:visible'), function(_, value) {
+            var row = $(value);
+            var duration = row.find('select.minute').val() + ':' + row.find('select.second').val();
+            if ($.inArray(duration, durations) !== -1) {
+                noteDurationsValid = false;
+            }
+            durations.push(duration);
+            if (!row.find('textarea.note').val()) {
+                noteNoteValid = false;
+            }
+        });
+        if (!noteDurationsValid) {
+            $('#result').html('<div class="alert alert-danger m-b-0">There are repetitive periods.</div>');
+            return false;
+        }
+        if (!noteNoteValid) {
+            $('#result').html('<div class="alert alert-danger m-b-0">There is a blank note.</div>');
+            return false;
+        }
+
+        var formData = {
+            id: $('#editVideoForm #videoId').val(),
+            name: name,
+            notes: $.map($('#videoNotesTableBody tr'), function(value) {
+                var row = $(value);
+                var minute = row.find('select.minute').val();
+                var second = row.find('select.second').val();
+                var note = row.find('textarea.note').val();
+                var id = row.attr('data-id');
+                return {
+                    minute: minute,
+                    second: second,
+                    note: note,
+                    id: id ? id : 0
+                };
+            })
+        };
+
+        $("#result").empty();
+
+        $("#editVideoForm :input").attr("disabled", true);
+        $('#editVideoButton').html("Editing...");
+
+        $.ajax({
+            url: "edit-video-a",
+            type: "POST",
+            data:  formData,
+            dataType: 'json',
+            cache: false,
+            headers : {
+                'csrftoken': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data)
+            {
+                if(data.success)
+                {
+                    $("#result").html("<div class='alert alert-success'>Video successfully edited.</div>");
+                } else {
+                    $("#result").html("<div class='alert alert-danger'>" + data.message + "</div>");
+                }
+                $("#editVideoForm :input").attr("disabled", false);
+                $('#editVideoButton').html("Edit Video");
+            }
+        });
+    }));
+</script>
 <?php } ?>

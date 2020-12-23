@@ -383,6 +383,60 @@ if(isset($pageRequest))
         } else {
             exit(throwError(500));
         }
+    } else if ($pageRequest == 'edit-video') {
+        if (!$isAdmin) {
+            echo 'Security';
+            exit();
+        }
+        $videoId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        if($videoId === false)
+        {
+            exit(throwError(400));
+        }
+        if(!isset($videoId) || empty($videoId))
+        {
+            exit(throwError(400));
+        }
+        $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+        if (!isset($name) || empty($name)) {
+            exit(throwError(400, 'Enter a name for the video.'));
+        }
+        $checkVideo = $DB_con->prepare("SELECT id FROM videos WHERE id = :id");
+        $checkVideo->execute(array(":id"=>$videoId));
+        if($checkVideo->rowCount() != 1)
+        {
+            exit(throwError(400));
+        }
+        try {
+            $updateVideo = $DB_con->prepare('UPDATE videos SET name = :name WHERE id = :id');
+            if ($updateVideo->execute(array(':name' => $name, ':id' => $videoId))) {
+                if (isset($_POST['notes']) && count($_POST['notes']) > 0) {
+                    foreach ($_POST['notes'] as $note) {
+                        if (isset($note['minute']) && isset($note['second']) && isset($note['note']) && isset($note['id'])) {
+                            if ($note['id'] < 0) {
+                                $deleteVideoNote = $DB_con->prepare('DELETE FROM video_notes WHERE id = :id AND videoId = :videoId');
+                                $deleteVideoNote->execute(array(':id' => abs($note['id']), ':videoId' => $videoId));
+                            } else if ($note['id'] > 0) {
+                                $updateVideoNote = $DB_con->prepare('UPDATE video_notes SET minute = :minute , second = :second, note = :note WHERE id = :id AND videoId = :videoId');
+                                $updateVideoNote->execute(array(':minute' => $note['minute'], ':second' => $note['second'], ':note' => $note['note'], ':id' => $note['id'], ':videoId' => $videoId));
+                            } else if ($note['id'] == 0) {
+                                $addVideoNote = $DB_con->prepare('INSERT INTO video_notes(videoId, minute, second, note) VALUES (:videoId, :minute, :second, :note)');
+                                $addVideoNote->execute(array(':videoId' => $videoId, ':minute' => $note['minute'], ':second' => $note['second'], ':note' => $note['note']));
+                            }
+                        }
+                    }
+                }
+                exit(throwError(200));
+            } else {
+                exit(throwError(500));
+            }
+        }
+        catch(PDOException $ex)
+        {
+            @unlink($app['videoDirectory'] . $name . '.' . $videoFileFormat);
+            echo $ex->getMessage();
+            exit();
+        }
     } else if ($pageRequest == 'get-videos') {
         $getVideosQuery = $DB_con->prepare("SELECT * FROM videos");
         $getVideosQuery->execute();

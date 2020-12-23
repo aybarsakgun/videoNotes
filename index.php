@@ -415,11 +415,12 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                                     </h2>
                                 </div>
                                 <div class="body">
-                                    <form id="videoUploadForm">
+                                    <form id="editVideoForm">
                                         <label for="name">Name</label>
                                         <div class="form-group">
                                             <div class="form-line">
                                                 <input type="text" id="name" name="name" value="<?=$fetchVideo['name']?>" class="form-control">
+                                                <input type="hidden" id="videoId" value="<?=$fetchVideo['id']?>">
                                             </div>
                                         </div>
                                         <div id="videoPreviewContent">
@@ -460,9 +461,11 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                                                     }
                                                     $getVideoNotes = $DB_con->prepare('SELECT * FROM video_notes WHERE videoId = :videoId');
                                                     $getVideoNotes->execute(array(':videoId' => $videoId));
+                                                    $i = 0;
                                                     while ($fetchVideoNotes = $getVideoNotes->fetch(PDO::FETCH_ASSOC)) {
+                                                        $i++;
                                                     ?>
-                                                        <tr id="row<?=-$fetchVideoNotes['id']?>">
+                                                        <tr id="row<?=$i?>" data-id="<?=$fetchVideoNotes['id']?>">
                                                             <td>
                                                                 <select class="form-control minute">
                                                                     <?php
@@ -489,7 +492,7 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                                                                 <textarea class="form-control note" rows="3"><?=$fetchVideoNotes['note']?></textarea>
                                                             </td>
                                                             <td>
-                                                                <button type="button" id="<?=-$fetchVideoNotes['id']?>" class="btn btn-danger btn-xs waves-effect deleteNoteButton">
+                                                                <button type="button" id="<?=$fetchVideoNotes['id']?>" class="btn btn-danger btn-xs waves-effect deleteNoteButton">
                                                                     <i class="material-icons">delete</i>
                                                                 </button>
                                                             </td>
@@ -502,7 +505,7 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                                             </div>
                                         </div>
                                         <div id="result"></div>
-                                        <button type="button" class="btn bg-<?=$app['themeColor']?> m-t-15 waves-effect" id="editVideoButton">Edit Video</button>
+                                        <button type="submit" class="btn bg-<?=$app['themeColor']?> m-t-15 waves-effect" id="editVideoButton">Edit Video</button>
                                     </form>
                                 </div>
                             </div>
