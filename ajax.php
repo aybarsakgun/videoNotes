@@ -119,6 +119,32 @@ if(isset($pageRequest))
             echo $ex->getMessage();
             exit();
         }
+    } else if ($pageRequest == 'delete-video') {
+        if (!$isAdmin) {
+            exit(throwError(401));
+        }
+        $videoId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        if($videoId === false)
+        {
+            exit(throwError(400));
+        }
+        if(!isset($videoId) || empty($videoId))
+        {
+            exit(throwError(400));
+        }
+        $checkVideo = $DB_con->prepare("SELECT id, fileName FROM videos WHERE id = :id");
+        $checkVideo->execute(array(":id"=>$videoId));
+        if($checkVideo->rowCount() != 1)
+        {
+            exit(throwError(400));
+        }
+        $fetchVideo = $checkVideo->fetch(PDO::FETCH_ASSOC);
+        $deleteVideo = $DB_con->prepare("DELETE FROM videos WHERE id = :id");
+        $deleteVideo->execute(array(":id"=>$videoId));
+        $deleteVideoNotes = $DB_con->prepare("DELETE from video_notes WHERE videoId = :videoId");
+        $deleteVideoNotes->execute(array(":videoId" => $videoId));
+        @unlink($app['videoDirectory'].$fetchVideo['fileName']);
+        exit(throwError(200));
     } else if ($pageRequest == 'get-users') {
         if (!$isAdmin) {
             echo 'Security';
@@ -377,7 +403,7 @@ if(isset($pageRequest))
                                 </a>
                                 <ul class="dropdown-menu pull-right">
                                     <li><a href="edit-video-<?=$fetchVideos['id']?>" class=" waves-effect waves-block">Edit Video</a></li>
-                                    <li><a href="javascript:void(0);" class=" waves-effect waves-block deleteVideoButton">Delete Video</a></li>
+                                    <li><a href="javascript:void(0);" class=" waves-effect waves-block deleteButton" data-video-id="<?=$fetchVideos['id']?>">Delete Video</a></li>
                                 </ul>
                             </li>
                         </ul>

@@ -212,24 +212,96 @@ $(function () {
 });
 </script>
 <?php } else if ($pageRequest && $pageRequest == 'home') { ?>
+<link rel="stylesheet" type="text/css" href="plugins/sweetalert/css/sweetalert.css">
+<script src="plugins/sweetalert/js/sweetalert.min.js"></script>
 <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet"/>
 <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/videojs-markers@1.0.1/dist/videojs-markers.min.js"></script>
 <script>
-    $('.page-loader-wrapper').show();
-    $.ajax({
-        url: "get-videos-a",
-        type: "GET",
-        contentType: false,
-        cache: false,
-        processData: false,
-        headers : {
-            'csrftoken': $('meta[name="csrf-token"]').attr('content')
+    getVideos();
+    function getVideos() {
+        $('.page-loader-wrapper').show();
+        $.ajax({
+            url: "get-videos-a",
+            type: "GET",
+            contentType: false,
+            cache: false,
+            processData: false,
+            headers : {
+                'csrftoken': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (data) {
+                $("#videosContainer").html(data);
+                $('.page-loader-wrapper').fadeOut();
+            }
+        });
+    }
+    $(document).on('click','.deleteButton',function(e) {
+        var videoId = $(this).data('video-id');
+        e.preventDefault();
+        swal({
+            title: "Warning!",
+            text: "Are you sure you want to delete the video?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it.",
+            cancelButtonText: "Cancel",
+            closeOnConfirm: false,
+            closeOnCancel: false,
+            showLoaderOnConfirm: true,
         },
-        success: function (data) {
-            $("#videosContainer").html(data);
-            $('.page-loader-wrapper').fadeOut();
-        }
+        function(isConfirm)
+        {
+            if (isConfirm)
+            {
+                setTimeout(function()
+                {
+                    $.ajax({
+                        type:'POST',
+                        url:'delete-video-a',
+                        data:'id=' + videoId,
+                        dataType: 'json',
+                        headers : {
+                            'csrftoken': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success:function(data)
+                        {
+                            if(data.success)
+                            {
+                                swal({
+                                    title: "Successful!",
+                                    text: "The video was deleted successfully.",
+                                    type: "success",
+                                    confirmButtonText: "OK",
+                                    closeOnConfirm: true
+                                });
+                                getVideos();
+                            }
+                            else
+                            {
+                                swal({
+                                    title: "Error!",
+                                    text: "Something went wrong. Please try again.",
+                                    type: "error",
+                                    confirmButtonText: "OK",
+                                    closeOnConfirm: true
+                                });
+                            }
+                        }
+                    });
+                }, 1000);
+            }
+            else
+            {
+                swal({
+                    title: "Canceled!",
+                    text: "Your request to delete the video has been canceled.",
+                    type: "error",
+                    confirmButtonText: "OK",
+                    closeOnConfirm: true
+                });
+            }
+        });
     });
 </script>
 <?php } else if ($pageRequest && $pageRequest == 'users') { ?>
@@ -257,70 +329,69 @@ $(function () {
     $(document).on('click','.deleteButton',function(e) {
         var userId = $(this).data('user-id');
         e.preventDefault();
-        swal(
+        swal({
+            title: "Warning!",
+            text: "Are you sure you want to delete the user?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete it.",
+            cancelButtonText: "Cancel",
+            closeOnConfirm: false,
+            closeOnCancel: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirm)
+        {
+            if (isConfirm)
             {
-                title: "Warning!",
-                text: "Are you sure you want to delete the user?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, delete it.",
-                cancelButtonText: "Cancel",
-                closeOnConfirm: false,
-                closeOnCancel: false,
-                showLoaderOnConfirm: true,
-            },
-            function(isConfirm)
-            {
-                if (isConfirm)
+                setTimeout(function()
                 {
-                    setTimeout(function()
-                    {
-                        $.ajax({
-                            type:'POST',
-                            url:'delete-user-a',
-                            data:'id=' + userId,
-                            dataType: 'json',
-                            headers : {
-                                'csrftoken': $('meta[name="csrf-token"]').attr('content')
-                            },
-                            success:function(data)
+                    $.ajax({
+                        type:'POST',
+                        url:'delete-user-a',
+                        data:'id=' + userId,
+                        dataType: 'json',
+                        headers : {
+                            'csrftoken': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success:function(data)
+                        {
+                            if(data.success)
                             {
-                                if(data.success)
-                                {
-                                    swal({
-                                        title: "Successful!",
-                                        text: "The user was deleted successfully.",
-                                        type: "success",
-                                        confirmButtonText: "OK",
-                                        closeOnConfirm: true
-                                    });
-                                    getUsers();
-                                }
-                                else
-                                {
-                                    swal({
-                                        title: "Error!",
-                                        text: "Something went wrong. Please try again.",
-                                        type: "error",
-                                        confirmButtonText: "OK",
-                                        closeOnConfirm: true
-                                    });
-                                }
+                                swal({
+                                    title: "Successful!",
+                                    text: "The user was deleted successfully.",
+                                    type: "success",
+                                    confirmButtonText: "OK",
+                                    closeOnConfirm: true
+                                });
+                                getUsers();
                             }
-                        });
-                    }, 1000);
-                }
-                else
-                {
-                    swal({
-                        title: "Canceled!",
-                        text: "Your request to delete the user has been canceled.",
-                        type: "error",
-                        confirmButtonText: "OK",
-                        closeOnConfirm: true
+                            else
+                            {
+                                swal({
+                                    title: "Error!",
+                                    text: "Something went wrong. Please try again.",
+                                    type: "error",
+                                    confirmButtonText: "OK",
+                                    closeOnConfirm: true
+                                });
+                            }
+                        }
                     });
-                }
-            });
+                }, 1000);
+            }
+            else
+            {
+                swal({
+                    title: "Canceled!",
+                    text: "Your request to delete the user has been canceled.",
+                    type: "error",
+                    confirmButtonText: "OK",
+                    closeOnConfirm: true
+                });
+            }
+        });
     });
 </script>
 <?php } else if ($pageRequest && $pageRequest == 'edit-user') { ?>
