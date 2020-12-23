@@ -86,7 +86,6 @@ if(loginCheck($DB_con) == true)
 		<script src="plugins/jquery/jquery.min.js"></script>
 		<script src="plugins/bootstrap/js/bootstrap.min.js"></script>
 		<script src="plugins/node-waves/waves.min.js"></script>
-		<script src="js/sha512.js"></script>
 		<script src="js/login.js"></script>
 	</body>
 </html>

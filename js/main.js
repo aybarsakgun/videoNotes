@@ -343,7 +343,7 @@ $(function () {
                 },
 				success: function(data)
 				{
-					if(data == 1)
+					if(data == "1")
 					{
 						window.location.href = 'home';
 					}

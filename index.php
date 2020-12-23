@@ -17,14 +17,18 @@ if(loginCheck($DB_con) == false)
     exit();
 }
 
-$getUser = $DB_con->prepare("SELECT username, email, name, type FROM users WHERE id = :id");
+$getUser = $DB_con->prepare("SELECT id, username, email, name, type FROM users WHERE id = :id");
 $getUser->execute(array(":id" => loginCheck($DB_con)));
 $user = $getUser->fetch(PDO::FETCH_ASSOC);
-$isAdmin = $user && $user['type'] === 'ADMIN';
+$isAdmin = $user && ($user['type'] === 'SUPER ADMIN' || $user['type'] === 'ADMIN');
 
 $pageRequest = filter_input(INPUT_GET, 'pr', FILTER_SANITIZE_STRING);
 if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
     $pageRequest = null;
+} else {
+    if (empty($pageRequest)) {
+        $pageRequest = 'home';
+    }
 }
 
 ?>
@@ -98,6 +102,12 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                         <?php if ($isAdmin) { ?>
                         <li class="header">Admin Controls</li>
                         <li>
+                            <a href="users">
+                                <i class="material-icons">people</i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="add-user">
                                 <i class="material-icons">person_add</i>
                                 <span>Add User</span>
@@ -134,17 +144,188 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                 </div>
             </div>
         </section>
-        <?php } else if ($pageRequest == 'add-user') { ?>
+        <?php } else if ($pageRequest == 'add-user') {
+            if (!$isAdmin) {
+                echo 401;
+                exit();
+            }
+        ?>
+            <section class="content">
+                <div class="container-fluid">
+                    <div class="row clearfix">
+                        <div class="row clearfix">
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div class="card">
+                                    <div class="header">
+                                        <h2>
+                                            Add User
+                                        </h2>
+                                    </div>
+                                    <div class="body">
+                                        <form id="addUserForm">
+                                            <label for="username">* Username</label>
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <input type="text" id="username" name="username" class="form-control">
+                                                </div>
+                                            </div>
+                                            <label for="email">E-Mail Address</label>
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <input type="text" id="email" name="email" class="form-control">
+                                                </div>
+                                            </div>
+                                            <label for="name">* Name</label>
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <input type="text" id="name" name="name" class="form-control">
+                                                </div>
+                                            </div>
+                                            <label for="password">* Password</label>
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <input type="password" id="password" name="password" class="form-control">
+                                                </div>
+                                            </div>
+                                            <label for="passwordVerify">* Password Verify</label>
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <input type="password" id="passwordVerify" name="passwordVerify" class="form-control">
+                                                </div>
+                                            </div>
+                                            <?php
+                                            if ($user['type'] === 'SUPER ADMIN') {
+                                                ?>
+                                                <label for="video">Type</label>
+                                                <div class="form-group">
+                                                    <input name="type" type="radio" id="typeUser" checked=""
+                                                           value="USER">
+                                                    <label for="typeUser">USER</label>
+                                                    <input name="type" type="radio" id="typeAdmin"
+                                                           value="ADMIN">
+                                                    <label for="typeAdmin">ADMIN</label>
+                                                </div>
+                                                <?php
+                                            }
+                                            ?>
+                                            <div id="result"></div>
+                                            <button type="submit" class="btn bg-<?=$app['themeColor']?> m-t-15 waves-effect" id="addUserButton">Add User</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        <?php } else if ($pageRequest == 'edit-user') {
+            $userId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+            if ($userId === false) {
+                echo 400;
+                exit();
+            }
+            if (!$isAdmin) {
+                echo 401;
+                exit();
+            }
+            $getUser = $DB_con->prepare("SELECT id, username, email, name, type FROM users WHERE id = :id");
+            $getUser->execute(array(':id' => $userId));
+            $fetchUser = $getUser->fetch(PDO::FETCH_ASSOC);
+            if ($user['type'] === 'ADMIN' && $fetchUser['type'] !== 'USER') {
+                echo 401;
+                exit();
+            }
+        ?>
         <section class="content">
             <div class="container-fluid">
                 <div class="row clearfix">
                     <div class="row clearfix">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <div class="card">
+                                <div class="header">
+                                    <h2>
+                                        Edit User
+                                    </h2>
+                                </div>
+                                <div class="body">
+                                    <form id="editUserForm">
+                                        <input type="hidden" name="id" value="<?=$fetchUser['id']?>">
+                                        <label for="username">Username</label>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="text" id="username" name="username" class="form-control" value="<?=$fetchUser['username']?>" disabled>
+                                            </div>
+                                        </div>
+                                        <label for="email">E-Mail Address</label>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="text" id="email" name="email" class="form-control" value="<?=$fetchUser['email']?>">
+                                            </div>
+                                        </div>
+                                        <label for="name">Name</label>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="text" id="name" name="name" class="form-control" value="<?=$fetchUser['name']?>">
+                                            </div>
+                                        </div>
+                                        <label for="password">Password <small>If you do not want to change it, leave it blank.</small></label>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="password" id="password" name="password" class="form-control">
+                                            </div>
+                                        </div>
+                                        <label for="passwordVerify">Password Verify</label>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="password" id="passwordVerify" name="passwordVerify" class="form-control">
+                                            </div>
+                                        </div>
+                                        <?php
+                                        if ($user['type'] === 'SUPER ADMIN' && $fetchUser['id'] !== $user['id']) {
+                                            ?>
+                                            <label for="video">Type</label>
+                                            <div class="form-group">
+                                                <input name="type" type="radio" id="typeUser"
+                                                       value="USER" <?php if ($fetchUser['type'] === 'USER') { ?> checked="" <?php } ?>>
+                                                <label for="typeUser">USER</label>
+                                                <input name="type" type="radio" id="typeAdmin"
+                                                       value="ADMIN" <?php if ($fetchUser['type'] === 'ADMIN') { ?> checked="" <?php } ?>>
+                                                <label for="typeAdmin">ADMIN</label>
+                                            </div>
+                                            <?php
+                                        }
+                                        ?>
+                                        <div id="result"></div>
+                                        <button type="submit" class="btn bg-<?=$app['themeColor']?> m-t-15 waves-effect" id="editUserButton">Edit User</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <?php } else if ($pageRequest == 'users') {
+            if (!$isAdmin) {
+                echo 401;
+                exit();
+            }
+        ?>
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row clearfix">
+                    <div class="row clearfix" id="usersContainer">
 
                     </div>
                 </div>
             </div>
         </section>
-        <?php } else if ($pageRequest == 'upload-video') { ?>
+        <?php } else if ($pageRequest == 'upload-video') {
+            if (!$isAdmin) {
+                echo 401;
+                exit();
+            }
+        ?>
         <section class="content">
             <div class="container-fluid">
                 <div class="row clearfix">
@@ -207,6 +388,129 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                 </div>
             </div>
         </section>
+        <?php
+        } else if ($pageRequest == 'edit-video') {
+            $videoId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+            if ($videoId === false) {
+                echo 400;
+                exit();
+            }
+            if (!$isAdmin) {
+                echo 401;
+                exit();
+            }
+            $getVideo = $DB_con->prepare("SELECT * FROM videos WHERE id = :id");
+            $getVideo->execute(array(':id' => $videoId));
+            $fetchVideo = $getVideo->fetch(PDO::FETCH_ASSOC);
+        ?>
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row clearfix">
+                    <div class="row clearfix">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <div class="card">
+                                <div class="header">
+                                    <h2>
+                                        Edit Video
+                                    </h2>
+                                </div>
+                                <div class="body">
+                                    <form id="videoUploadForm">
+                                        <label for="name">Name</label>
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <input type="text" id="name" name="name" value="<?=$fetchVideo['name']?>" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div id="videoPreviewContent">
+                                            <label for="videoPreview">Preview</label>
+                                            <video controls disablepictureinpicture controlslist="nodownload" width="100%" id="videoPreviewElement">
+                                                <source id="videoPreview" src="<?=$app['videoDirectory'].$fetchVideo['fileName']?>">
+                                                Your browser does not support HTML5 video.
+                                            </video>
+                                            <input type="hidden" id="videoDuration" value="<?=$fetchVideo['duration']?>">
+                                        </div>
+                                        <div id="videoNotes">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Minute</th>
+                                                        <th>Second</th>
+                                                        <th>Note</th>
+                                                        <th>
+                                                            <button type="button" class="btn btn-success btn-xs waves-effect" id="addNewNoteButton">
+                                                                <i class="material-icons">note_add</i>
+                                                            </button>
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody id="videoNotesTableBody">
+                                                    <?php
+                                                    $duration = (int)$fetchVideo['duration'];
+                                                    $minutes = [];
+                                                    for ($i = 0; $i <= floor($duration / 60); $i++) {
+                                                        $minutes[] = $i;
+                                                    }
+                                                    $greatestMinute = max($minutes);
+                                                    $remainingSeconds = $duration - ($greatestMinute * 60);
+                                                    $seconds = [];
+                                                    for ($i = 0; $i <= ($greatestMinute > 0 ? 59 : $remainingSeconds); $i++) {
+                                                        $seconds[] = $i;
+                                                    }
+                                                    $getVideoNotes = $DB_con->prepare('SELECT * FROM video_notes WHERE videoId = :videoId');
+                                                    $getVideoNotes->execute(array(':videoId' => $videoId));
+                                                    while ($fetchVideoNotes = $getVideoNotes->fetch(PDO::FETCH_ASSOC)) {
+                                                    ?>
+                                                        <tr id="row<?=-$fetchVideoNotes['id']?>">
+                                                            <td>
+                                                                <select class="form-control minute">
+                                                                    <?php
+                                                                    foreach ($minutes as $minute) {
+                                                                        ?>
+                                                                        <option value="<?=$minute?>" <?php if ($minute == $fetchVideoNotes['minute']) { ?>selected<?php } ?>><?=$minute?></option>
+                                                                        <?php
+                                                                    }
+                                                                    ?>
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <select class="form-control second">
+                                                                    <?php
+                                                                    foreach ($seconds as $second) {
+                                                                        ?>
+                                                                        <option value="<?=$second?>" <?php if ($second == $fetchVideoNotes['second']) { ?>selected<?php } ?>><?=$second?></option>
+                                                                        <?php
+                                                                    }
+                                                                    ?>
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <textarea class="form-control note" rows="3"><?=$fetchVideoNotes['note']?></textarea>
+                                                            </td>
+                                                            <td>
+                                                                <button type="button" id="<?=-$fetchVideoNotes['id']?>" class="btn btn-danger btn-xs waves-effect deleteNoteButton">
+                                                                    <i class="material-icons">delete</i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div id="result"></div>
+                                        <button type="button" class="btn bg-<?=$app['themeColor']?> m-t-15 waves-effect" id="editVideoButton">Edit Video</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
         <?php } ?>
     <?php } ?>
         <script src="plugins/jquery/jquery.min.js"></script>
@@ -215,30 +519,6 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
         <script src="plugins/node-waves/waves.min.js"></script>
         <script src="plugins/jquery-inputmask/jquery.inputmask.bundle.min.js"></script>
         <script src="js/main.js"></script>
-        <?php if ($pageRequest == 'home') { ?>
-        <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet"/>
-        <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/videojs-markers@1.0.1/dist/videojs-markers.min.js"></script>
-        <script>
-        $('.page-loader-wrapper').show();
-        $.ajax({
-            url: "get-videos-a",
-            type: "GET",
-            contentType: false,
-            cache: false,
-            processData: false,
-            headers : {
-                'csrftoken': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function (data) {
-                $("#videosContainer").html(data);
-                $('.page-loader-wrapper').fadeOut();
-            }
-        });
-        </script>
-        <?php
-        }
-        include_once 'pageJS.php';
-        ?>
+        <?php include_once 'pageJS.php'; ?>
     </body>
 </html>

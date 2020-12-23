@@ -97,21 +97,6 @@ $.VideoNotes.login = {
 		$("#loginForm").on('submit',(function(e)
 		{
 			e.preventDefault();
-			var password = $("#password").val();
-			if($("input#p").length)
-			{
-				$("input#p").val(hex_sha512(password));
-			}
-			else
-			{
-				$('<input>').attr({
-					type: 'hidden',
-					id: 'p',
-					name: 'p',
-					value: hex_sha512(password)
-				}).appendTo(this);
-			}
-			$("#password").val("");
 			$('.loginButton').prop('disabled', true);
 			$('.loginButton').html("Logging in...");
 			$("#result").empty();
@@ -133,6 +118,7 @@ $.VideoNotes.login = {
 					{
 						$('.loginButton').prop('disabled', false);
 						$('.loginButton').html("Login");
+						$('#username').focus();
 						if(data == 1)
 						{
 							$("#result").html("<div class='alert alert-success'>You have successfully logged in. You are being redirected...</div>");

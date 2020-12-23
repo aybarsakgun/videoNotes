@@ -6,11 +6,19 @@ RewriteRule ^login$ login.php [L,QSA]
 RewriteRule ^logout$ ajax.php?pr=logout [L,QSA]
 
 RewriteRule ^home$ index.php?pr=home [L,QSA]
+RewriteRule ^users$ index.php?pr=users [L,QSA]
 
+RewriteRule ^get-users-a$ ajax.php?pr=get-users [L,QSA]
+RewriteRule ^delete-user-a$ ajax.php?pr=delete-user [L,QSA]
+RewriteRule ^edit-user-([0-9]+)$ index.php?pr=edit-user&id=$1 [L,QSA]
+RewriteRule ^edit-user-a$ ajax.php?pr=edit-user [L,QSA]
 RewriteRule ^add-user$ index.php?pr=add-user [L,QSA]
+RewriteRule ^add-user-a$ ajax.php?pr=add-user [L,QSA]
 
+RewriteRule ^get-videos-a$ ajax.php?pr=get-videos [L,QSA]
+RewriteRule ^delete-video-a$ ajax.php?pr=delete-video [L,QSA]
+RewriteRule ^edit-video-([0-9]+)$ index.php?pr=edit-video&id=$1 [L,QSA]
+RewriteRule ^edit-video-a$ ajax.php?pr=edit-video [L,QSA]
 RewriteRule ^upload-video$ index.php?pr=upload-video [L,QSA]
 RewriteRule ^upload-video-a$ ajax.php?pr=upload-video [L,QSA]
 RewriteRule ^add-video-a$ ajax.php?pr=add-video [L,QSA]
-
-RewriteRule ^get-videos-a$ ajax.php?pr=get-videos [L,QSA]

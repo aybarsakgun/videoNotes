@@ -211,4 +211,249 @@ $(function () {
     }
 });
 </script>
+<?php } else if ($pageRequest && $pageRequest == 'home') { ?>
+<link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet"/>
+<script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/videojs-markers@1.0.1/dist/videojs-markers.min.js"></script>
+<script>
+    $('.page-loader-wrapper').show();
+    $.ajax({
+        url: "get-videos-a",
+        type: "GET",
+        contentType: false,
+        cache: false,
+        processData: false,
+        headers : {
+            'csrftoken': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (data) {
+            $("#videosContainer").html(data);
+            $('.page-loader-wrapper').fadeOut();
+        }
+    });
+</script>
+<?php } else if ($pageRequest && $pageRequest == 'users') { ?>
+<link rel="stylesheet" type="text/css" href="plugins/sweetalert/css/sweetalert.css">
+<script src="plugins/sweetalert/js/sweetalert.min.js"></script>
+<script>
+    getUsers();
+    function getUsers() {
+        $('.page-loader-wrapper').show();
+        $.ajax({
+            url: "get-users-a",
+            type: "GET",
+            contentType: false,
+            cache: false,
+            processData: false,
+            headers : {
+                'csrftoken': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (data) {
+                $("#usersContainer").html(data);
+                $('.page-loader-wrapper').fadeOut();
+            }
+        });
+    }
+    $(document).on('click','.deleteButton',function(e) {
+        var userId = $(this).data('user-id');
+        e.preventDefault();
+        swal(
+            {
+                title: "Warning!",
+                text: "Are you sure you want to delete the user?",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, delete it.",
+                cancelButtonText: "Cancel",
+                closeOnConfirm: false,
+                closeOnCancel: false,
+                showLoaderOnConfirm: true,
+            },
+            function(isConfirm)
+            {
+                if (isConfirm)
+                {
+                    setTimeout(function()
+                    {
+                        $.ajax({
+                            type:'POST',
+                            url:'delete-user-a',
+                            data:'id=' + userId,
+                            dataType: 'json',
+                            headers : {
+                                'csrftoken': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success:function(data)
+                            {
+                                if(data.success)
+                                {
+                                    swal({
+                                        title: "Successful!",
+                                        text: "The user was deleted successfully.",
+                                        type: "success",
+                                        confirmButtonText: "OK",
+                                        closeOnConfirm: true
+                                    });
+                                    getUsers();
+                                }
+                                else
+                                {
+                                    swal({
+                                        title: "Error!",
+                                        text: "Something went wrong. Please try again.",
+                                        type: "error",
+                                        confirmButtonText: "OK",
+                                        closeOnConfirm: true
+                                    });
+                                }
+                            }
+                        });
+                    }, 1000);
+                }
+                else
+                {
+                    swal({
+                        title: "Canceled!",
+                        text: "Your request to delete the user has been canceled.",
+                        type: "error",
+                        confirmButtonText: "OK",
+                        closeOnConfirm: true
+                    });
+                }
+            });
+    });
+</script>
+<?php } else if ($pageRequest && $pageRequest == 'edit-user') { ?>
+<script>
+    $("#editUserForm").on('submit',(function(e)
+    {
+        e.preventDefault();
+
+        $("#result").empty();
+
+        $('#editUserButton').prop('disabled', true);
+        $('#editUserButton').html("Editing...");
+
+
+        var password = $("#password").val();
+        var passwordVerify = $("#passwordVerify").val();
+
+        if(password.length > 0)
+        {
+            if(password.length < 6 || password.length > 29)
+            {
+                $("#result").html("<div class='alert alert-danger'>User new password can consist of a minimum of 6 characters and a maximum of 30 characters. Please try again.</div>");
+                $('#editUserButton').prop('disabled', false);
+                $('#editUserButton').html("Edit User");
+                $("#password").val("");
+                $("#passwordVerify").val("");
+                return false;
+            }
+        }
+        if(password.length > 0 && passwordVerify.length > 0)
+        {
+            if (password != passwordVerify)
+            {
+                $("#result").html("<div class='alert alert-danger'>Passwords do not match.</div>");
+                $('#editUserButton').prop('disabled', false);
+                $('#editUserButton').html("Edit User");
+                $("#password").val("");
+                $("#passwordVerify").val("");
+                return false;
+            }
+        }
+
+        $.ajax({
+            url: "edit-user-a",
+            type: "POST",
+            data:  new FormData(this),
+            dataType: 'json',
+            contentType: false,
+            cache: false,
+            processData:false,
+            headers : {
+                'csrftoken': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data)
+            {
+                if(data.success)
+                {
+                    $("#result").html("<div class='alert alert-success'>User successfully edited.</div>");
+                    $("#password").val("");
+                    $("#passwordVerify").val("");
+                } else {
+                    $("#result").html("<div class='alert alert-danger'>" + data.message + "</div>");
+                }
+                $('#editUserButton').prop('disabled', false);
+                $('#editUserButton').html("Edit User");
+            }
+        });
+    }));
+</script>
+<?php } else if ($pageRequest && $pageRequest == 'add-user') { ?>
+<script>
+    $("#addUserForm").on('submit',(function(e)
+    {
+        e.preventDefault();
+
+        $("#result").empty();
+
+        $('#addUserButton').prop('disabled', true);
+        $('#addUserButton').html("Adding...");
+
+
+        var password = $("#password").val();
+        var passwordVerify = $("#passwordVerify").val();
+
+        if(password.length > 0)
+        {
+            if(password.length < 6 || password.length > 29)
+            {
+                $("#result").html("<div class='alert alert-danger'>User password can consist of a minimum of 6 characters and a maximum of 30 characters. Please try again.</div>");
+                $('#addUserButton').prop('disabled', false);
+                $('#addUserButton').html("Add User");
+                $("#password").val("");
+                $("#passwordVerify").val("");
+                return false;
+            }
+        }
+        if(password.length > 0 && passwordVerify.length > 0)
+        {
+            if (password != passwordVerify)
+            {
+                $("#result").html("<div class='alert alert-danger'>Passwords do not match.</div>");
+                $('#addUserButton').prop('disabled', false);
+                $('#addUserButton').html("Add User");
+                $("#password").val("");
+                $("#passwordVerify").val("");
+                return false;
+            }
+        }
+
+        $.ajax({
+            url: "add-user-a",
+            type: "POST",
+            data:  new FormData(this),
+            dataType: 'json',
+            contentType: false,
+            cache: false,
+            processData:false,
+            headers : {
+                'csrftoken': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data)
+            {
+                if(data.success)
+                {
+                    $("#result").html("<div class='alert alert-success'>User successfully added.</div>");
+                    $("#addUserForm").trigger('reset');
+                } else {
+                    $("#result").html("<div class='alert alert-danger'>" + data.message + "</div>");
+                }
+                $('#addUserButton').prop('disabled', false);
+                $('#addUserButton').html("Add User");
+            }
+        });
+    }));
+</script>
 <?php } ?>

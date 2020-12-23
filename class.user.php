@@ -178,24 +178,6 @@ class USER
 		}
 	}
 
-    public function register($username, $password, $name)
-    {
-        try
-        {
-            $stmt = $this->db->prepare("INSERT INTO users(username, password, name) VALUES(:username, :password, :name)");
-            $stmt->bindparam(":username",$username);
-            $stmt->bindparam(":password",$password);
-            $stmt->bindparam(":name",$name);
-            $stmt->execute();
-            echo 1;
-            exit();
-        }
-        catch(PDOException $ex)
-        {
-            echo $ex->getMessage();
-        }
-    }
-
 	public function logout()
 	{
 		$_SESSION = array();
@@ -207,7 +189,6 @@ class USER
 				$params["secure"], 
 				$params["httponly"]);
 		session_destroy();
-		echo 1;
 		return true;
 	}
 }

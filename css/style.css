@@ -8261,3 +8261,7 @@ html.ie11 .bs-searchbox .form-control {
   font-family: Arial, sans-serif;
   font-size: 16px;
 }
+
+div#videoNotes table.table {
+  min-width: 600px;
+}
