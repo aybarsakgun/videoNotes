@@ -8262,8 +8262,12 @@ html.ie11 .bs-searchbox .form-control {
   font-size: 16px;
 }
 
-div#videoNotes table.table {
-  min-width: 600px;
+div#videoNotes table.table select.form-control {
+  min-width: 65px;
+}
+
+div#videoNotes table.table textarea.form-control {
+  min-width: 100px;
 }
 
 .video-js .vjs-current-time {
