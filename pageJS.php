@@ -1,5 +1,29 @@
 <?php if ($pageRequest && $pageRequest == 'upload-video') { ?>
+<script src="plugins/bootstrap-notify/bootstrap-notify.min.js"></script>
 <script type="text/javascript">
+function showNotification(text) {
+    $.notify({
+            message: text
+        },
+        {
+            type: 'bg-green',
+            allow_dismiss: true,
+            newest_on_top: true,
+            timer: 1000,
+            placement: {
+                from: 'bottom',
+                align: 'right'
+            },
+            animate: {
+                enter: 'animated bounceInUp',
+                exit: 'animated bounceOutUp'
+            },
+            template: '<div data-notify="container" class="bootstrap-notify-container alert alert-dismissible bg-green p-r-35" role="alert">' +
+                '<button type="button" aria-hidden="true" class="close" data-notify="dismiss">×</button>' +
+                '<span data-notify="message">'+text+'</span>' +
+                '</div>'
+        });
+}
 $(function () {
     var reader = {};
     var file = {};
@@ -23,7 +47,6 @@ $(function () {
         }
         $('#videoNotesTableBody').html('');
     });
-
     $('#videoUploadForm #addNewNoteButton').on('click', function() {
         var noteIndex = $('#videoNotesTableBody tr').length;
         var duration = parseInt($('#videoUploadForm #videoDuration').val());
@@ -63,6 +86,23 @@ $(function () {
         </tr>
         `;
         $('#videoUploadForm #videoNotesTableBody').append(trContent);
+        if ($(this).attr('data-set-time') === 'true') {
+            var lastNote = $('#videoUploadForm #videoNotesTableBody tr:last');
+            lastNote.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+            var previewVideo = document.getElementById("videoPreviewElement");
+            previewVideo.pause();
+            var currentTime = new Date(previewVideo.currentTime * 1000).toISOString().substr(14, 5).split(':');
+            lastNote.find('select.minute').val(currentTime[0].charAt(0) === '0' ? currentTime[0].charAt(1) : currentTime[0]);
+            lastNote.find('select.second').val(currentTime[1].charAt(0) === '0' ? currentTime[1].charAt(1) : currentTime[1]);
+            lastNote.find('textarea.note').focus();
+        }
+    });
+
+    $('#videoUploadForm #setThumbnail').on('click', function() {
+        var previewVideo = document.getElementById("videoPreviewElement");
+        var currentTime = previewVideo.currentTime;
+        $('#videoUploadForm #thumbnailSecond').val(currentTime);
+        showNotification('Video thumbnail time changed to: ' + currentTime);
     });
 
     $('body').on('change', '#videoNotesTableBody .minute', function () {
@@ -119,12 +159,12 @@ $(function () {
             $('#result').html('<div class="alert alert-danger m-b-0">There is a blank note.</div>');
             return false;
         }
-        uploadFile(0, name, '', $('#videoUploadForm #videoDuration').val());
+        uploadFile(0, name, '', $('#videoUploadForm #videoDuration').val(), $('#videoUploadForm #thumbnailSecond').val());
     }
 
     $('#uploadVideoButton').on( 'click', startUpload );
 
-    function uploadFile(start, name, videoFileName, duration) {
+    function uploadFile(start, name, videoFileName, duration, thumbnailSecond) {
         var nextSlice = start + sliceSize + 1;
         var blob = file.slice(start, nextSlice);
 
@@ -160,7 +200,7 @@ $(function () {
                         var percentDone = Math.floor((sizeDone / file.size) * 100);
                         if (nextSlice < file.size) {
                             $('#result').html('<div class="progress"><div class="progress-bar bg-<?=$app["themeColor"]?> progress-bar-striped active" role="progressbar" aria-valuenow="'+percentDone+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentDone+'%">Uploading '+percentDone+'%</div></div>');
-                            uploadFile(nextSlice, name, data.videoFileName, duration);
+                            uploadFile(nextSlice, name, data.videoFileName, duration, thumbnailSecond);
                         } else {
                             var notes = $.map($('#videoNotesTableBody tr'), function(value) {
                                 var row = $(value);
@@ -182,17 +222,21 @@ $(function () {
                                     videoFileName: data.videoFileName,
                                     fileType: file.type,
                                     duration: duration,
-                                    notes: notes
+                                    notes: notes,
+                                    thumbnailSecond: thumbnailSecond,
                                 },
                                 success: function(data)
                                 {
-                                    if (data === 1) {
+                                    if (data && data.success) {
                                         $('#result').html('<div class="alert alert-success m-b-0">Video successfully uploaded.</div>');
                                         $("#videoUploadForm").trigger('reset');
                                         $('#videoUploadForm #videoDuration').val(undefined);
                                         $('#videoUploadForm #videoPreviewContent').hide();
                                         $('#videoUploadForm #videoNotes').hide();
                                         $('#videoNotesTableBody').html('');
+                                        setTimeout(function() {
+                                            window.location.href = 'edit-video-' + data.videoId;
+                                        }, 1000);
                                     } else {
                                         $('#result').html('<div class="alert alert-danger m-b-0">An error occurred.</div>');
                                     }
@@ -414,7 +458,7 @@ $(function () {
                 type: 'bg-green',
                 allow_dismiss: true,
                 newest_on_top: true,
-                timer: 66000,
+                timer: 1000,
                 placement: {
                     from: 'bottom',
                     align: 'right'
@@ -547,7 +591,7 @@ $(function () {
                 type: 'bg-green',
                 allow_dismiss: true,
                 newest_on_top: true,
-                timer: 66000,
+                timer: 1000,
                 placement: {
                     from: 'bottom',
                     align: 'right'
@@ -660,7 +704,31 @@ $(function () {
     }));
 </script>
 <?php } else if ($pageRequest && $pageRequest == 'edit-video') { ?>
-<script>
+<script src="plugins/bootstrap-notify/bootstrap-notify.min.js"></script>
+<script type="text/javascript">
+    function showNotification(text) {
+        $.notify({
+                message: text
+            },
+            {
+                type: 'bg-green',
+                allow_dismiss: true,
+                newest_on_top: true,
+                timer: 1000,
+                placement: {
+                    from: 'bottom',
+                    align: 'right'
+                },
+                animate: {
+                    enter: 'animated bounceInUp',
+                    exit: 'animated bounceOutUp'
+                },
+                template: '<div data-notify="container" class="bootstrap-notify-container alert alert-dismissible bg-green p-r-35" role="alert">' +
+                    '<button type="button" aria-hidden="true" class="close" data-notify="dismiss">×</button>' +
+                    '<span data-notify="message">'+text+'</span>' +
+                    '</div>'
+            });
+    }
     $('#editVideoForm #addNewNoteButton').on('click', function() {
         var noteIndex = $('#videoNotesTableBody tr').length + 1;
         var duration = parseInt($('#editVideoForm #videoDuration').val());
@@ -700,6 +768,23 @@ $(function () {
         </tr>
         `;
         $('#editVideoForm #videoNotesTableBody').append(trContent);
+        if ($(this).attr('data-set-time') === 'true') {
+            var lastNote = $('#editVideoForm #videoNotesTableBody tr:last');
+            lastNote.fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+            var previewVideo = document.getElementById("videoPreviewElement");
+            previewVideo.pause();
+            var currentTime = new Date(previewVideo.currentTime * 1000).toISOString().substr(14, 5).split(':');
+            lastNote.find('select.minute').val(currentTime[0].charAt(0) === '0' ? currentTime[0].charAt(1) : currentTime[0]);
+            lastNote.find('select.second').val(currentTime[1].charAt(0) === '0' ? currentTime[1].charAt(1) : currentTime[1]);
+            lastNote.find('textarea.note').focus();
+        }
+    });
+
+    $('#editVideoForm #setThumbnail').on('click', function() {
+        var previewVideo = document.getElementById("videoPreviewElement");
+        var currentTime = previewVideo.currentTime;
+        $('#editVideoForm #thumbnailSecond').val(currentTime);
+        showNotification('Video thumbnail time changed to: ' + currentTime);
     });
 
     $('body').on('change', '#videoNotesTableBody .minute', function () {
@@ -760,6 +845,7 @@ $(function () {
         var formData = {
             id: $('#editVideoForm #videoId').val(),
             name: name,
+            thumbnailSecond: $('#editVideoForm #thumbnailSecond').val(),
             notes: $.map($('#videoNotesTableBody tr'), function(value) {
                 var row = $(value);
                 var minute = row.find('select.minute').val();

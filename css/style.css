@@ -8278,3 +8278,14 @@ div#videoNotes table.table {
 .video-js .vjs-remaining-time {
   display: none;
 }
+
+.videoPreview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.videoPreview .videoPreviewContent {
+  position: absolute;
+  top: 0;
+}

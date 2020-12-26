@@ -88,6 +88,7 @@ if(isset($pageRequest))
         $videoFileName = filter_input(INPUT_POST, 'videoFileName', FILTER_SANITIZE_STRING);
         $videoFileType = filter_input(INPUT_POST, 'fileType', FILTER_SANITIZE_STRING);
         $videoFileDuration = filter_input(INPUT_POST, 'duration', FILTER_SANITIZE_STRING);
+        $videoThumbnailSecond = filter_input(INPUT_POST, 'thumbnailSecond', FILTER_SANITIZE_STRING);
         $videoFileFormat = explode('/', $videoFileType)[1];
         if (!isset($name) || empty($name)) {
             @unlink($app['videoDirectory'] . $name . '.' . $videoFileFormat);
@@ -95,8 +96,9 @@ if(isset($pageRequest))
             exit();
         }
         try {
-            $addVideo = $DB_con->prepare('INSERT INTO videos(name, fileName, duration, format) VALUES (:name, :fileName, :duration, :format)');
-            if ($addVideo->execute(array(':name' => $name, ':fileName' => $videoFileName . '.' . $videoFileFormat, ':duration' => $videoFileDuration, ':format' => $videoFileType))) {
+            $addVideo = $DB_con->prepare('INSERT INTO videos(name, fileName, duration, format, thumbnailSecond) VALUES (:name, :fileName, :duration, :format, :thumbnailSecond)');
+            if ($addVideo->execute(array(':name' => $name, ':fileName' => $videoFileName . '.' . $videoFileFormat, ':duration' => $videoFileDuration, ':format' => $videoFileType, ':thumbnailSecond' => $videoThumbnailSecond))) {
+                $videoId = $DB_con->lastInsertId();
                 if (isset($_POST['notes']) && count($_POST['notes']) > 0) {
                     $videoId = $DB_con->lastInsertId();
                     foreach ($_POST['notes'] as $note) {
@@ -105,10 +107,10 @@ if(isset($pageRequest))
                             $addNote->execute(array(':videoId' => $videoId, ':minute' => $note['minute'], ':second' => $note['second'], ':note' => $note['note']));
                         }
                     }
-                    echo 1;
+                    echo json_encode(['success' => true, 'videoId' => $videoId]);
                     exit();
                 } else {
-                    echo 1;
+                    echo json_encode(['success' => true, 'videoId' => $videoId]);
                     exit();
                 }
             }
@@ -398,6 +400,7 @@ if(isset($pageRequest))
             exit(throwError(400));
         }
         $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+        $thumbnailSecond = filter_input(INPUT_POST, 'thumbnailSecond', FILTER_SANITIZE_STRING);
         if (!isset($name) || empty($name)) {
             exit(throwError(400, 'Enter a name for the video.'));
         }
@@ -408,8 +411,8 @@ if(isset($pageRequest))
             exit(throwError(400));
         }
         try {
-            $updateVideo = $DB_con->prepare('UPDATE videos SET name = :name WHERE id = :id');
-            if ($updateVideo->execute(array(':name' => $name, ':id' => $videoId))) {
+            $updateVideo = $DB_con->prepare('UPDATE videos SET name = :name, thumbnailSecond = :thumbnailSecond WHERE id = :id');
+            if ($updateVideo->execute(array(':name' => $name, ':thumbnailSecond' => $thumbnailSecond, ':id' => $videoId))) {
                 if (isset($_POST['notes']) && count($_POST['notes']) > 0) {
                     foreach ($_POST['notes'] as $note) {
                         if (isset($note['minute']) && isset($note['second']) && isset($note['note']) && isset($note['id'])) {
@@ -484,7 +487,7 @@ if(isset($pageRequest))
                 player_<?=$index?>.one('play', function () {
                     this.currentTime(0);
                 });
-                player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>#t=17', type: '<?=$fetchVideos['format']?>'});
+                player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>#t=<?=$fetchVideos['thumbnailSecond']?>', type: '<?=$fetchVideos['format']?>'});
                 player_<?=$index?>.markers({
                     markerTip: {
                         display: false

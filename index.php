@@ -398,15 +398,25 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                                                     <div class="form-line">
                                                         <input type="file" id="video" name="video" class="form-control" accept="video/*">
                                                         <input type="hidden" id="videoDuration">
+                                                        <input type="hidden" id="thumbnailSecond" name="thumbnailSecond">
                                                     </div>
                                                 </div>
-
                                                 <div id="videoPreviewContent" style="display:none">
                                                     <label for="videoPreview">Preview</label>
-                                                    <video controls disablepictureinpicture controlslist="nodownload" width="100%" id="videoPreviewElement">
-                                                        <source id="videoPreview">
-                                                        Your browser does not support HTML5 video.
-                                                    </video>
+                                                    <div class="videoPreview">
+                                                        <video controls disablepictureinpicture controlslist="nodownload" width="100%" id="videoPreviewElement">
+                                                            <source id="videoPreview">
+                                                            Your browser does not support HTML5 video.
+                                                        </video>
+                                                        <div class="videoPreviewContent">
+                                                            <button type="button" class="btn btn-success btn-xs waves-effect" id="addNewNoteButton" data-set-time="true">
+                                                                <i class="material-icons">note_add</i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-danger btn-xs waves-effect" id="setThumbnail">
+                                                                <i class="material-icons">image</i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
@@ -480,11 +490,22 @@ if (in_array($pageRequest, $onlyAdminAccessiblePages) && !$isAdmin) {
                                                 </div>
                                                 <div id="videoPreviewContent">
                                                     <label for="videoPreview">Preview</label>
-                                                    <video controls disablepictureinpicture controlslist="nodownload" width="100%" id="videoPreviewElement">
-                                                        <source id="videoPreview" src="<?=$app['videoDirectory'].$fetchVideo['fileName']?>">
-                                                        Your browser does not support HTML5 video.
-                                                    </video>
+                                                    <div class="videoPreview">
+                                                        <video controls disablepictureinpicture controlslist="nodownload" width="100%" id="videoPreviewElement">
+                                                            <source id="videoPreview" src="<?=$app['videoDirectory'].$fetchVideo['fileName']?>#t=<?=$fetchVideo['thumbnailSecond']?>">
+                                                            Your browser does not support HTML5 video.
+                                                        </video>
+                                                        <div class="videoPreviewContent">
+                                                            <button type="button" class="btn btn-success btn-xs waves-effect" id="addNewNoteButton" data-set-time="true">
+                                                                <i class="material-icons">note_add</i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-danger btn-xs waves-effect" id="setThumbnail">
+                                                                <i class="material-icons">image</i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                     <input type="hidden" id="videoDuration" value="<?=$fetchVideo['duration']?>">
+                                                    <input type="hidden" id="thumbnailSecond" name="thumbnailSecond" value="<?=$fetchVideo['thumbnailSecond']?>">
                                                 </div>
                                             </div>
                                             <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
