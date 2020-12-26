@@ -395,7 +395,73 @@ $(function () {
     });
 </script>
 <?php } else if ($pageRequest && $pageRequest == 'edit-user') { ?>
+<script src="plugins/bootstrap-notify/bootstrap-notify.min.js"></script>
 <script>
+    function toggleVisibility(_this, input) {
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            $(_this).text('visibility_off');
+        } else {
+            input.attr('type', 'password');
+            $(_this).text('visibility');
+        }
+    }
+    function showNotification(text) {
+        $.notify({
+                message: text
+            },
+            {
+                type: 'bg-green',
+                allow_dismiss: true,
+                newest_on_top: true,
+                timer: 66000,
+                placement: {
+                    from: 'bottom',
+                    align: 'right'
+                },
+                animate: {
+                    enter: 'animated bounceInUp',
+                    exit: 'animated bounceOutUp'
+                },
+                template: '<div data-notify="container" class="bootstrap-notify-container alert alert-dismissible bg-green p-r-35" role="alert">' +
+                    '<button type="button" aria-hidden="true" class="close" data-notify="dismiss">×</button>' +
+                    '<span data-notify="message">'+text+'</span>' +
+                    '</div>'
+            });
+    }
+    function generatePassword() {
+        var length = 8,
+            charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            retVal = "";
+        for (var i = 0, n = charset.length; i < length; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return retVal;
+    }
+    $("#generatePassword").on('click', function(e) {
+        var generatedPassword = generatePassword();
+        $('#password').val(generatedPassword);
+        $('#passwordVerify').val(generatedPassword);
+        // var password = document.getElementById("password");
+        // var inputTypeChanged = false;
+        // if (password.type === 'password') {
+        //     password.type = 'text';
+        //     inputTypeChanged = true;
+        // }
+        // password.select();
+        // password.setSelectionRange(0, 99999);
+        // document.execCommand("copy");
+        // if (inputTypeChanged) {
+        //     password.type = 'password';
+        // }
+        showNotification('Password generated.');
+    });
+    $("#passwordVisibilityChanger").on('click', function(e) {
+        toggleVisibility(this, $('#password'));
+    });
+    $("#passwordVerifyVisibilityChanger").on('click', function(e) {
+        toggleVisibility(this, $('#passwordVerify'));
+    });
     $("#editUserForm").on('submit',(function(e)
     {
         e.preventDefault();
@@ -462,7 +528,73 @@ $(function () {
     }));
 </script>
 <?php } else if ($pageRequest && $pageRequest == 'add-user') { ?>
+<script src="plugins/bootstrap-notify/bootstrap-notify.min.js"></script>
 <script>
+    function toggleVisibility(_this, input) {
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            $(_this).text('visibility_off');
+        } else {
+            input.attr('type', 'password');
+            $(_this).text('visibility');
+        }
+    }
+    function showNotification(text) {
+        $.notify({
+                message: text
+            },
+            {
+                type: 'bg-green',
+                allow_dismiss: true,
+                newest_on_top: true,
+                timer: 66000,
+                placement: {
+                    from: 'bottom',
+                    align: 'right'
+                },
+                animate: {
+                    enter: 'animated bounceInUp',
+                    exit: 'animated bounceOutUp'
+                },
+                template: '<div data-notify="container" class="bootstrap-notify-container alert alert-dismissible bg-green p-r-35" role="alert">' +
+                    '<button type="button" aria-hidden="true" class="close" data-notify="dismiss">×</button>' +
+                    '<span data-notify="message">'+text+'</span>' +
+                    '</div>'
+            });
+    }
+    function generatePassword() {
+        var length = 8,
+            charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            retVal = "";
+        for (var i = 0, n = charset.length; i < length; ++i) {
+            retVal += charset.charAt(Math.floor(Math.random() * n));
+        }
+        return retVal;
+    }
+    $("#generatePassword").on('click', function(e) {
+        var generatedPassword = generatePassword();
+        $('#password').val(generatedPassword);
+        $('#passwordVerify').val(generatedPassword);
+        // var password = document.getElementById("password");
+        // var inputTypeChanged = false;
+        // if (password.type === 'password') {
+        //     password.type = 'text';
+        //     inputTypeChanged = true;
+        // }
+        // password.select();
+        // password.setSelectionRange(0, 99999);
+        // document.execCommand("copy");
+        // if (inputTypeChanged) {
+        //     password.type = 'password';
+        // }
+        showNotification('Password generated.');
+    });
+    $("#passwordVisibilityChanger").on('click', function(e) {
+        toggleVisibility(this, $('#password'));
+    });
+    $("#passwordVerifyVisibilityChanger").on('click', function(e) {
+        toggleVisibility(this, $('#passwordVerify'));
+    });
     $("#addUserForm").on('submit',(function(e)
     {
         e.preventDefault();

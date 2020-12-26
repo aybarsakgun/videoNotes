@@ -8265,3 +8265,16 @@ html.ie11 .bs-searchbox .form-control {
 div#videoNotes table.table {
   min-width: 600px;
 }
+
+.video-js .vjs-current-time {
+  display: block !important;
+}
+.vjs-time-divider {
+  display: block !important;
+}
+.video-js .vjs-duration {
+  display: block !important;
+}
+.video-js .vjs-remaining-time {
+  display: none;
+}

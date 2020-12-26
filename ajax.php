@@ -481,7 +481,10 @@ if(isset($pageRequest))
                         'pictureInPictureToggle': false
                     }
                 });
-                player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>', type: '<?=$fetchVideos['format']?>'});
+                player_<?=$index?>.one('play', function () {
+                    this.currentTime(0);
+                });
+                player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>#t=17', type: '<?=$fetchVideos['format']?>'});
                 player_<?=$index?>.markers({
                     markerTip: {
                         display: false
@@ -500,14 +503,17 @@ if(isset($pageRequest))
                         $('#overlay_<?=$index?>').show();
                     },
                     onMarkerReached: function(marker) {
-                        player_<?=$index?>.pause();
-                        let currentTime = player_<?=$index?>.currentTime();
-                        setTimeout(function () {
-                            if (currentTime === player_<?=$index?>.currentTime()) {
-                                $('#overlay_<?=$index?> .text').text(marker.text);
-                                $('#overlay_<?=$index?>').show();
-                            }
-                        }, 200);
+                        if (player_<?=$index?>.hasStarted_) {
+                            player_<?=$index?>.pause();
+                            let currentTime = player_<?=$index?>.currentTime();
+                            setTimeout(function () {
+                                if (currentTime === player_<?=$index?>.currentTime()) {
+                                    $('#overlay_<?=$index?> .text').text(marker.text);
+                                    $('#overlay_<?=$index?>').show();
+                                }
+                            }, 200);
+                        }
+
                     },
                 });
                 $('#overlay_<?=$index?>').appendTo($('#video_<?=$index?>'));
