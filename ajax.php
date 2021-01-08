@@ -478,6 +478,12 @@ if(isset($pageRequest))
                 </div>
             </div>
             <script>
+                function setActiveVideo(videoIndex) {
+                    localStorage.setItem('activeVideo', videoIndex);
+                }
+                function setActiveVideoLastMarkerDuration(duration) {
+                    localStorage.setItem('activeVideoLastMarkerDuration', duration);
+                }
                 var player_<?=$index?> = videojs('video_<?=$index?>', {
                     controls: true,
                     controlBar: {
@@ -486,6 +492,8 @@ if(isset($pageRequest))
                 });
                 player_<?=$index?>.one('play', function () {
                     this.currentTime(0);
+                    setActiveVideo(<?=$index?>);
+                    setActiveVideoLastMarkerDuration(0);
                 });
                 player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>#t=<?=$fetchVideos['thumbnailSecond']?>', type: '<?=$fetchVideos['format']?>'});
                 player_<?=$index?>.markers({
@@ -504,10 +512,14 @@ if(isset($pageRequest))
                         player_<?=$index?>.pause();
                         $('#overlay_<?=$index?> .text').text(marker.text);
                         $('#overlay_<?=$index?>').show();
+                        setActiveVideo(<?=$index?>);
+                        setActiveVideoLastMarkerDuration(marker.duration);
                     },
                     onMarkerReached: function(marker) {
                         if (player_<?=$index?>.hasStarted_) {
                             player_<?=$index?>.pause();
+                            setActiveVideo(<?=$index?>);
+                            setActiveVideoLastMarkerDuration(marker.time);
                             let currentTime = player_<?=$index?>.currentTime();
                             setTimeout(function () {
                                 if (currentTime === player_<?=$index?>.currentTime()) {

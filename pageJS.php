@@ -261,6 +261,34 @@ $(function () {
 <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet"/>
 <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/videojs-markers@1.0.1/dist/videojs-markers.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
+<script>
+    "use strict";
+    if (annyang) {
+        var videoContinue = function() {
+            var activeVideoId = localStorage.getItem('activeVideo');
+            if (activeVideoId != null) {
+                $('#overlay_' + activeVideoId).hide();
+                window['player_' + activeVideoId].play();
+            }
+        };
+        var videoReplay = function() {
+            var activeVideoId = localStorage.getItem('activeVideo');
+            var activeVideoLastMarkerDuration = localStorage.getItem('activeVideoLastMarkerDuration');
+            if (activeVideoId != null && activeVideoLastMarkerDuration != null) {
+                $('#overlay_' + activeVideoId).hide();
+                window['player_' + activeVideoId].currentTime(activeVideoLastMarkerDuration > 0 ? (activeVideoLastMarkerDuration - 1) : activeVideoLastMarkerDuration);
+                window['player_' + activeVideoId].play();
+            }
+        };
+        var commands = {
+            'video continue': videoContinue,
+            'video replay': videoReplay,
+        };
+        annyang.addCommands(commands);
+        annyang.start();
+    }
+</script>
 <script>
     getVideos();
     function getVideos() {
