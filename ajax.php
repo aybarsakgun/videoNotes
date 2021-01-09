@@ -481,8 +481,8 @@ if(isset($pageRequest))
                 function setActiveVideo(videoIndex) {
                     localStorage.setItem('activeVideo', videoIndex);
                 }
-                function setActiveVideoLastMarkerDuration(duration) {
-                    localStorage.setItem('activeVideoLastMarkerDuration', duration);
+                function setActiveVideoReplayDuration(duration) {
+                    localStorage.setItem('activeVideoReplayDuration', duration);
                 }
                 var player_<?=$index?> = videojs('video_<?=$index?>', {
                     controls: true,
@@ -493,7 +493,7 @@ if(isset($pageRequest))
                 player_<?=$index?>.one('play', function () {
                     this.currentTime(0);
                     setActiveVideo(<?=$index?>);
-                    setActiveVideoLastMarkerDuration(0);
+                    setActiveVideoReplayDuration(0);
                 });
                 player_<?=$index?>.src({src: '<?=$app['videoDirectory'].$fetchVideos['fileName']?>#t=<?=$fetchVideos['thumbnailSecond']?>', type: '<?=$fetchVideos['format']?>'});
                 player_<?=$index?>.markers({
@@ -501,25 +501,31 @@ if(isset($pageRequest))
                         display: false
                     },
                     markers: [
-                        <?php while ($fetchVideoNotes = $getVideoNotes->fetch(PDO::FETCH_ASSOC)) { ?>
+                        <?php
+                        $replayDuration = 0;
+                        while ($fetchVideoNotes = $getVideoNotes->fetch(PDO::FETCH_ASSOC)) {?>
                         {
                             time: <?=(($fetchVideoNotes['minute'] * 60) + $fetchVideoNotes['second'])?>,
                             text: '<?=escapeJavaScriptText($fetchVideoNotes['note'])?>',
+                            replayDuration: <?=$replayDuration?>
                         },
-                        <?php } ?>
+                        <?php
+                        $replayDuration = (($fetchVideoNotes['minute'] * 60) + $fetchVideoNotes['second']) + 1;
+                        }
+                        ?>
                     ],
                     onMarkerClick: function(marker) {
                         player_<?=$index?>.pause();
                         $('#overlay_<?=$index?> .text').text(marker.text);
                         $('#overlay_<?=$index?>').show();
                         setActiveVideo(<?=$index?>);
-                        setActiveVideoLastMarkerDuration(marker.duration);
+                        setActiveVideoReplayDuration(marker.replayDuration);
                     },
                     onMarkerReached: function(marker) {
-                        if (player_<?=$index?>.hasStarted_) {
+                        if (player_<?=$index?>.hasStarted_ && marker.time === Math.trunc(player_<?=$index?>.currentTime())) {
                             player_<?=$index?>.pause();
                             setActiveVideo(<?=$index?>);
-                            setActiveVideoLastMarkerDuration(marker.time);
+                            setActiveVideoReplayDuration(marker.replayDuration);
                             let currentTime = player_<?=$index?>.currentTime();
                             setTimeout(function () {
                                 if (currentTime === player_<?=$index?>.currentTime()) {

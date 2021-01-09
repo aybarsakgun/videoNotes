@@ -274,10 +274,10 @@ $(function () {
         };
         var videoReplay = function() {
             var activeVideoId = localStorage.getItem('activeVideo');
-            var activeVideoLastMarkerDuration = localStorage.getItem('activeVideoLastMarkerDuration');
-            if (activeVideoId != null && activeVideoLastMarkerDuration != null) {
+            var activeVideoReplayDuration = localStorage.getItem('activeVideoReplayDuration');
+            if (activeVideoId != null && $('#overlay_' + activeVideoId).is(":visible")) {
                 $('#overlay_' + activeVideoId).hide();
-                window['player_' + activeVideoId].currentTime(activeVideoLastMarkerDuration > 0 ? (activeVideoLastMarkerDuration - 1) : activeVideoLastMarkerDuration);
+                window['player_' + activeVideoId].currentTime(activeVideoReplayDuration == null ? 0 : activeVideoReplayDuration);
                 window['player_' + activeVideoId].play();
             }
         };
