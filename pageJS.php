@@ -276,7 +276,9 @@ $(function () {
             var activeVideoId = localStorage.getItem('activeVideo');
             var activeVideoReplayDuration = localStorage.getItem('activeVideoReplayDuration');
             if (activeVideoId != null && $('#overlay_' + activeVideoId).is(":visible")) {
-                localStorage.setItem('videoReplayed', 'true');
+                if (parseInt(activeVideoReplayDuration) > 0) {
+                    localStorage.setItem('videoReplayed', 'true');
+                }
                 $('#overlay_' + activeVideoId).hide();
                 window['player_' + activeVideoId].currentTime(activeVideoReplayDuration == null ? 0 : activeVideoReplayDuration);
                 window['player_' + activeVideoId].play();
