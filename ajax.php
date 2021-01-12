@@ -445,7 +445,7 @@ if(isset($pageRequest))
         $getVideosQuery->execute();
         $index = 0;
         while ($fetchVideos = $getVideosQuery->fetch(PDO::FETCH_ASSOC)) {
-            $getVideoNotes = $DB_con->prepare('SELECT * FROM video_notes WHERE videoId = :videoId');
+            $getVideoNotes = $DB_con->prepare('SELECT *, ((minute * 60) + second) as duration FROM video_notes WHERE videoId = :videoId ORDER BY duration ASC');
             $getVideoNotes->execute(array(':videoId' => $fetchVideos['id']));
             ?>
             <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
@@ -505,12 +505,12 @@ if(isset($pageRequest))
                         $replayDuration = 0;
                         while ($fetchVideoNotes = $getVideoNotes->fetch(PDO::FETCH_ASSOC)) {?>
                         {
-                            time: <?=(($fetchVideoNotes['minute'] * 60) + $fetchVideoNotes['second'])?>,
+                            time: <?=$fetchVideoNotes['duration']?>,
                             text: '<?=escapeJavaScriptText($fetchVideoNotes['note'])?>',
                             replayDuration: <?=$replayDuration?>
                         },
                         <?php
-                        $replayDuration = (($fetchVideoNotes['minute'] * 60) + $fetchVideoNotes['second']) + 1;
+                        $replayDuration = $fetchVideoNotes['duration'];
                         }
                         ?>
                     ],
@@ -522,6 +522,10 @@ if(isset($pageRequest))
                         setActiveVideoReplayDuration(marker.replayDuration);
                     },
                     onMarkerReached: function(marker) {
+                        if (localStorage.getItem('videoReplayed') === 'true') {
+                            localStorage.setItem('videoReplayed', 'false');
+                            return;
+                        }
                         if (player_<?=$index?>.hasStarted_ && marker.time === Math.trunc(player_<?=$index?>.currentTime())) {
                             player_<?=$index?>.pause();
                             setActiveVideo(<?=$index?>);
